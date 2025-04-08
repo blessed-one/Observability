@@ -9,4 +9,4 @@ services:
     deploy:
       replicas: 5
     ports:
-      - "${NODE_MIN_PORT}-${NODE_MAX_PORT}:8080"
+      - "${FIRST_SERVICE_MIN_PORT}-${FIRST_SERVICE_MAX_PORT}:8080"
