@@ -10,3 +10,11 @@ services:
       replicas: 2
     ports:
       - "5029-5030:8080"
+  
+  balancer:
+    image: balancer
+    build:
+        context: .
+        dockerfile: Balancer/Dockerfile
+    ports:
+      - "5049:5049"
