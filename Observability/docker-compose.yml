@@ -7,6 +7,6 @@ services:
       dockerfile: FirstService/Dockerfile
     env_file: .env
     deploy:
-      replicas: 2
+      replicas: 5
     ports:
-      - "5029-5030:8080"
+      - "${NODE_MIN_PORT}-${NODE_MAX_PORT}:8080"
