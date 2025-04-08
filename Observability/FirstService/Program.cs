@@ -1,13 +1,12 @@
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
+var configuration = builder.Configuration;
 
-services.AddHttpClient("SecondService", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5000");
-})
-
+configuration.AddEnvironmentVariables();
 
 var app = builder.Build();
 app.UseWelcomePage();
+
+app.MapGet("/", () => "Hello World!");
 
 app.Run();
