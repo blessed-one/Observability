@@ -1,4 +1,4 @@
-﻿name: ${PROJECT_NAME}
+name: ${PROJECT_NAME}
 services:
   firstservice:
     image: firstservice
@@ -7,9 +7,9 @@ services:
       dockerfile: FirstService/Dockerfile
     env_file: .env
     deploy:
-      replicas: 2
+      replicas: 5
     ports:
-      - "5029-5030:8080"
+      - "${FIRST_SERVICE_MIN_PORT}-${FIRST_SERVICE_MAX_PORT}:8080"
   
   balancer:
     image: balancer
