@@ -1,4 +1,4 @@
-﻿name: ${PROJECT_NAME}
+name: ${PROJECT_NAME}
 services:
   firstservice:
     image: firstservice
@@ -10,3 +10,11 @@ services:
       replicas: 5
     ports:
       - "${FIRST_SERVICE_MIN_PORT}-${FIRST_SERVICE_MAX_PORT}:8080"
+  
+  balancer:
+    image: balancer
+    build:
+        context: .
+        dockerfile: Balancer/Dockerfile
+    ports:
+      - "5049:5049"
