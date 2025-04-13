@@ -8,6 +8,9 @@ services.AddHttpClient();
 services.AddSwaggerGen();
 services.AddSingleton<ILoadBalancer, RoundRobinBalancer>();
 
+var url = Environment.GetEnvironmentVariable("ApiGateway__Url");
+Console.WriteLine(url);
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -19,9 +22,5 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<LoadBalancerMiddleware>();
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
 
 app.Run();

@@ -1,7 +1,4 @@
-﻿
-using DotNetEnv;
-
-namespace Balancer
+﻿namespace Balancer
 {
     public class RoundRobinBalancer : ILoadBalancer
     {
@@ -11,9 +8,16 @@ namespace Balancer
 
         public RoundRobinBalancer()
         {
-            Env.Load();
-            
-            _servers = Env.GetString("SERVER_URLS")?.Split(',').ToList() ?? new List<string>();
+            if (!int.TryParse(Environment.GetEnvironmentVariable("FIRST_SERVICE_MIN_PORT"),
+                out int minPort)
+                || !int.TryParse(Environment.GetEnvironmentVariable("FIRST_SERVICE_MAX_PORT"),
+                out int maxPort))
+                throw new ArgumentException("Env incorrect port");
+
+            for (int port = minPort; port <= maxPort; port++)
+            {
+                AddServer($"http://localhost:{port}");
+            }
         }
 
         public string GetNextServer()
@@ -32,7 +36,7 @@ namespace Balancer
             }
         }
 
-        public void AddSever(string serverUrl)
+        public void AddServer(string serverUrl)
         {
             if (string.IsNullOrEmpty(serverUrl))
             {
