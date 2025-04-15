@@ -4,7 +4,7 @@
     {
         string GetNextServer();
 
-        void AddSever(string severUrl);
+        void AddServer(string severUrl);
 
         void RemoveSever(string severUrl);
 
