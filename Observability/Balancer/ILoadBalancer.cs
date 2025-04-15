@@ -6,7 +6,7 @@
 
         void AddServer(string severUrl);
 
-        void RemoveSever(string severUrl);
+        void RemoveServer(string severUrl);
 
         IReadOnlyList<string> GetServers();
     }
