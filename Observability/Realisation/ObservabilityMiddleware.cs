@@ -6,7 +6,7 @@ namespace Realisation;
 
 public class ObservabilityMiddleware(IObservabilitySender sender, RequestDelegate next)
 {
-    private static string nodeId = Guid.NewGuid().ToString();
+    private static string nodeId = $"fir-{Environment.GetEnvironmentVariable("HOSTNAME")}";
     public async Task InvokeAsync(HttpContext context)
     {
         var activity = new ObservabilityActivity(nodeId, context);

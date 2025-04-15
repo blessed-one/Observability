@@ -1,7 +1,7 @@
 name: ${PROJECT_NAME}
 services:
-  firstservice:
-    image: firstservice
+  first-service:
+    image: first-service
     build:
       context: .
       dockerfile: FirstService/Dockerfile
@@ -10,6 +10,17 @@ services:
       replicas: 5
     ports:
       - "${FIRST_SERVICE_MIN_PORT}-${FIRST_SERVICE_MAX_PORT}:8080"
+        
+  second-service:
+    image: second-service
+    build:
+      context: .
+      dockerfile: SecondService/Dockerfile
+    env_file: .env
+    deploy:
+      replicas: 5
+    ports:
+      - "${SECOND_SERVICE_MIN_PORT}-${SECOND_SERVICE_MAX_PORT}:8080"
   
   balancer:
     image: balancer
