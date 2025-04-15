@@ -4,13 +4,12 @@ using Realisation.Abstractions;
 
 namespace Realisation;
 
-public class ObservabilityMiddleware(IObservabilitySender sender, RequestDelegate next, string nodeId)
+public class ObservabilityMiddleware(IObservabilitySender sender, RequestDelegate next)
 {
-    private static readonly ActivitySource ActivitySource = new("Observability");
+    private static string nodeId = Guid.NewGuid().ToString();
     public async Task InvokeAsync(HttpContext context)
     {
-        var activity = new ObservabilityActivity(
-            ActivitySource.StartActivity($"{context.Request.Path}")!, nodeId, context);
+        var activity = new ObservabilityActivity(nodeId, context);
 
         try
         {
@@ -26,6 +25,7 @@ public class ObservabilityMiddleware(IObservabilitySender sender, RequestDelegat
         {
             activity.Stop();
             await sender.SendAsync(activity.GetActivityJson());
+            Console.WriteLine(activity.GetActivityJson());
         }
     }
 }

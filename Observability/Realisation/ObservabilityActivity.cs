@@ -7,12 +7,10 @@ namespace Realisation;
 public class ObservabilityActivity
 {
     private ObservabilityRecord Record { get; }
-    private readonly Activity _activity;
     private readonly Stopwatch _stopWatch;
     
-    public ObservabilityActivity(Activity activity, string nodeId, HttpContext httpContext)
+    public ObservabilityActivity(string nodeId, HttpContext httpContext)
     {
-        _activity = activity;
         _stopWatch = Stopwatch.StartNew();
         Record = new ObservabilityRecord
         {
@@ -26,26 +24,22 @@ public class ObservabilityActivity
             IsError = false
         };
         AddFromRequest(httpContext.Request);
+        httpContext.Items["TraceId"] = Record.TraceId;
     }
 
     private void AddFromRequest(HttpRequest request)
     {
         var method = request.Method;
-        var headers = request.Headers;
-        var parentId = headers.TryGetValue("traceparent", out var parentIdValue)
+        var parentId = request.Headers.TryGetValue("traceparent", out var parentIdValue)
             ? parentIdValue.ToString()
             : "0";
-        headers.Remove("traceparent");
+        var path = request.Path.ToString();
         
         Record.ParentId = parentId;
         Record.HttpRequestData["method"] = method;
-        Record.HttpRequestData["headers"] = headers.ToDictionary(
-            h => h.Key, 
-            h => h.Value.ToString());
+        Record.HttpRequestData["path"] = path;
     }
     
-    public string GetParentId() => Record.ParentId; 
-
     public void Start() => _stopWatch.Start();
 
     public void Stop()
@@ -57,7 +51,6 @@ public class ObservabilityActivity
             ["memory"] = GC.GetTotalMemory(false),
             ["cpu"] = Process.GetCurrentProcess().TotalProcessorTime
         };
-        _activity.Stop();
     }
 
     public void Error(string message)
