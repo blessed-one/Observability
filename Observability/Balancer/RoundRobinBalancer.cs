@@ -2,7 +2,7 @@
 {
     public class RoundRobinBalancer : ILoadBalancer
     {
-        private readonly List<string> _servers;
+        private readonly List<string> _servers = new();
         private int _currentIndex = 0;
         private readonly object _lock = new();
 
@@ -52,7 +52,7 @@
             }
         }
 
-        public void RemoveSever(string serverUrl)
+        public void RemoveServer(string serverUrl)
         {
             lock ( _lock)
             {
@@ -67,6 +67,8 @@
 
         public IReadOnlyList<string> GetServers()
         {
+            Console.WriteLine("Server getting start");
+
             lock (_lock)
                 return _servers.AsReadOnly();
         }
