@@ -1,6 +1,4 @@
-﻿using System.Collections.Concurrent;
-
-namespace Balancer
+﻿namespace Balancer
 {
     public class RoundRobinBalancer : ILoadBalancer
     {
