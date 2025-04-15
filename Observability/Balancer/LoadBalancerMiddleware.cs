@@ -1,34 +1,66 @@
 ﻿
+using System.Buffers;
+using System.Net.Http;
+
 namespace Balancer
 {
-    public class LoadBalancerMiddleware : IMiddleware
+    public class LoadBalancerMiddleware(ILoadBalancer loadBalancer) : IMiddleware
     {
-        private readonly ILoadBalancer _loadBalancer;
-
-        public LoadBalancerMiddleware(ILoadBalancer loadBalancer)
-        {
-            _loadBalancer = loadBalancer;
-        }
+        private readonly HttpClient _httpClient = new();
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
-            var targetSever = _loadBalancer.GetNextServer();
-
-            var targetUri = new Uri(targetSever);
-            context.Request.Host = new HostString(targetUri.Host);
-            context.Request.Scheme = targetUri.Scheme;
-            context.Request.PathBase = targetUri.LocalPath;
-
-            using var httpClient = new HttpClient();
-            var responce = await httpClient.SendAsync(new HttpRequestMessage
+            try
             {
-                Method = new HttpMethod(context.Request.Method),
-                RequestUri = new Uri(targetUri, context.Request.Path),
-                Content = new StreamContent(context.Request.Body)
-            });
+                var targetServer = loadBalancer.GetNextServer();
+                var targetUri = new Uri(targetServer);
 
-            context.Response.StatusCode = (int)responce.StatusCode;
-            await responce.Content.CopyToAsync(context.Response.Body);
+                var request = new HttpRequestMessage
+                {
+                    Method = new HttpMethod(context.Request.Method),
+                    RequestUri = new Uri(targetUri, context.Request.Path)
+                };
+
+                if (context.Request.Body.CanRead)
+                {
+                    var content = await context.Request.BodyReader.ReadAsync();
+                    request.Content = new ByteArrayContent(content.Buffer.ToArray());
+                }
+
+                foreach (var header in context.Request.Headers)
+                {
+                    var isContentHeader = header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase)
+                        || header.Key.Equals("ContentType", StringComparison.OrdinalIgnoreCase)
+                        || header.Key.Equals("Content-Length", StringComparison.OrdinalIgnoreCase);
+
+                    if (isContentHeader)
+                    {
+                        request.Content ??= new ByteArrayContent([]);
+                        request.Content.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+                    }
+                    else
+                    {
+                        request.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+                    }
+                }
+
+                var response = await _httpClient.SendAsync(request);
+
+                context.Response.StatusCode = (int)response.StatusCode;
+                foreach (var header in response.Headers)
+                {
+                    context.Response.Headers[header.Key] = header.Value.ToArray();
+                }
+
+                await response.Content.CopyToAsync(context.Response.Body);
+            }
+            catch (Exception ex)
+            {
+                context.Response.StatusCode = 503;
+                await context.Response.WriteAsync("Service unavailable");
+                Console.WriteLine("Error processing request");
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }
