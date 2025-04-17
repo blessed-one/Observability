@@ -1,7 +1,10 @@
 
+using System.Buffers;
+using System.Net.Http;
+
 namespace Balancer
 {
-    public class LoadBalancerMiddleware : IMiddleware
+    public class LoadBalancerMiddleware(ILoadBalancer loadBalancer) : IMiddleware
     {
         private readonly ILoadBalancer _loadBalancer;
 
