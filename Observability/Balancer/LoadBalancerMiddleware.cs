@@ -1,6 +1,4 @@
-﻿
-using System.Buffers;
-using System.Net.Http;
+﻿using System.Buffers;
 
 namespace Balancer
 {
