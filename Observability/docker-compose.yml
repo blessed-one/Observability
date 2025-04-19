@@ -1,61 +1,35 @@
 name: ${PROJECT_NAME}
 services:
+  first-service:
+    image: first-service
+    build:
+      context: .
+      dockerfile: FirstService/Dockerfile
+    env_file: .env
+    deploy:
+      replicas: 5
+    ports:
+      - "${FIRST_SERVICE_MIN_PORT}-${FIRST_SERVICE_MAX_PORT}:8080"
+    depends_on:
+      - second-service
+  
+  second-service:
+    image: second-service
+    build:
+      context: .
+      dockerfile: SecondService/Dockerfile
+    env_file: .env
+    deploy:
+      replicas: 5
+    ports:
+      - "${SECOND_SERVICE_MIN_PORT}-${SECOND_SERVICE_MAX_PORT}:8080"
+  
   balancer:
     image: balancer
     build:
       context: .
       dockerfile: Balancer/Dockerfile
-    env_file: .env
     ports:
-      - "5049:8080"
+      - "5049:5049"
     depends_on:
-      - first-service-1
-      - first-service-2
-      - first-service-3
-      - first-service-4
-      - first-service-5 
-  
-  first-service-1:
-    image: first-service
-    build:
-      context: .
-      dockerfile: FirstService/Dockerfile
-    env_file: .env
-    ports:
-      - "5051:8080"
-  
-  first-service-2:
-    image: first-service
-    build:
-      context: .
-      dockerfile: FirstService/Dockerfile
-    env_file: .env
-    ports:
-      - "5052:8080"
-  
-  first-service-3:
-    image: first-service
-    build:
-      context: .
-      dockerfile: FirstService/Dockerfile
-    env_file: .env
-    ports:
-      - "5053:8080"
-  
-  first-service-4:
-    image: first-service
-    build:
-      context: .
-      dockerfile: FirstService/Dockerfile
-    env_file: .env
-    ports:
-      - "5054:8080"
-  
-  first-service-5:
-    image: first-service
-    build:
-      context: .
-      dockerfile: FirstService/Dockerfile
-    env_file: .env
-    ports:
-      - "5055:8080"
+      - first-service
