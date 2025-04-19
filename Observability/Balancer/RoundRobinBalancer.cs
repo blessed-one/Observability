@@ -8,16 +8,11 @@
 
         public RoundRobinBalancer()
         {
-            if (!int.TryParse(Environment.GetEnvironmentVariable("FIRST_SERVICE_MIN_PORT"),
-                out int minPort)
-                || !int.TryParse(Environment.GetEnvironmentVariable("FIRST_SERVICE_MAX_PORT"),
-                out int maxPort))
-                throw new ArgumentException("Env incorrect port");
-
-            for (int port = minPort; port <= maxPort; port++)
-            {
-                AddServer($"http://localhost:{port}");
-            }
+            AddServer("http://first-service-1:8080");
+            AddServer("http://first-service-2:8080");
+            AddServer("http://first-service-3:8080");
+            AddServer("http://first-service-4:8080");
+            AddServer("http://first-service-5:8080");
         }
 
         public string GetNextServer()
@@ -54,7 +49,7 @@
 
         public void RemoveServer(string serverUrl)
         {
-            lock ( _lock)
+            lock (_lock)
             {
                 _servers.Remove(serverUrl);
 
@@ -67,8 +62,6 @@
 
         public IReadOnlyList<string> GetServers()
         {
-            Console.WriteLine("Server getting start");
-
             lock (_lock)
                 return _servers.AsReadOnly();
         }

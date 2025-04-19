@@ -42,15 +42,28 @@ namespace Balancer
                     }
                 }
 
+                Console.WriteLine("Sending request...");
                 var response = await _httpClient.SendAsync(request);
 
                 context.Response.StatusCode = (int)response.StatusCode;
+                
                 foreach (var header in response.Headers)
                 {
-                    context.Response.Headers[header.Key] = header.Value.ToArray();
+                    if (!header.Key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase))
+                        context.Response.Headers[header.Key] = header.Value.ToArray();
                 }
 
+                foreach (var header in response.Content.Headers)
+                {
+                    if (!header.Key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase))
+                        context.Response.Headers[header.Key] = header.Value.ToArray();
+                }
+
+                context.Response.ContentType = response.Content.Headers.ContentType?.ToString();
+                context.Response.ContentLength = response.Content.Headers.ContentLength;
+
                 await response.Content.CopyToAsync(context.Response.Body);
+                await context.Response.Body.FlushAsync();
             }
             catch (Exception ex)
             {
