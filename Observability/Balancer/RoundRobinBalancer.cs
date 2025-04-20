@@ -2,20 +2,41 @@
 {
     public class RoundRobinBalancer : ILoadBalancer
     {
-        private readonly List<string> _servers = new();
+        private readonly List<Uri> _servers = new();
         private int _currentIndex = 0;
         private readonly object _lock = new();
+        private readonly MyDnsClient _dnsClient;
 
         public RoundRobinBalancer()
         {
-            AddServer("http://first-service-1:8080");
-            AddServer("http://first-service-2:8080");
-            AddServer("http://first-service-3:8080");
-            AddServer("http://first-service-4:8080");
-            AddServer("http://first-service-5:8080");
+            _dnsClient = new MyDnsClient();
+        
+            UpdateServers("first-service", 8080).Wait();
+        
+            var timer = new Timer(_ => 
+            {
+                UpdateServers("first-service", 8080).Wait();
+            }, null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+        }
+        
+        private async Task UpdateServers(string serviceName, int port)
+        {
+            try 
+            {
+                var endpoints = await _dnsClient.ResolveServiceAsync(serviceName);
+                lock (_lock)
+                {
+                    _servers.Clear();
+                    _servers.AddRange(endpoints.Select(ip => new Uri($"http://{ip}:{port}")));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
-        public string GetNextServer()
+        public Uri GetNextServer()
         {
             lock (_lock)
             {
@@ -24,16 +45,16 @@
                     throw new InvalidOperationException("No servers available in the pool.");
                 }
 
-                var serverUrl = _servers[_currentIndex];
+                var serverUri = _servers[_currentIndex];
                 _currentIndex = (_currentIndex + 1) % _servers.Count;
 
-                return serverUrl;
+                return serverUri;
             }
         }
 
-        public void AddServer(string serverUrl)
+        public void AddServer(Uri serverUrl)
         {
-            if (string.IsNullOrEmpty(serverUrl))
+            if (string.IsNullOrEmpty(serverUrl.ToString()))
             {
                 throw new ArgumentException("Server URL cannot be empty.", nameof(serverUrl));
             }
@@ -47,7 +68,7 @@
             }
         }
 
-        public void RemoveServer(string serverUrl)
+        public void RemoveServer(Uri serverUrl)
         {
             lock (_lock)
             {
@@ -60,7 +81,7 @@
             }
         }
 
-        public IReadOnlyList<string> GetServers()
+        public IReadOnlyList<Uri> GetServers()
         {
             lock (_lock)
                 return _servers.AsReadOnly();
