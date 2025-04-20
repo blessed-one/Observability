@@ -5,12 +5,23 @@ namespace Balancer
     public class LoadBalancerMiddleware(ILoadBalancer loadBalancer) : IMiddleware
     {
         private readonly HttpClient _httpClient = new();
+        private readonly Dictionary<string, string[]> _serviceEndpoints = new()
+        {
+            {"first-service", Environment.GetEnvironmentVariable("FIRST_SERVICE_ENDPOINTS")?.Split(',') 
+                              ?? Array.Empty<string>() },
+            {"second-service", Environment.GetEnvironmentVariable("SECOND_SERVICE_ENDPOINTS")?.Split(',') 
+                               ?? Array.Empty<string>()}
+        };
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             try
             {
-                var targetUri = loadBalancer.GetNextServer();
+                var targetService = GetTargetService(context.Request.Path.Value!);
+                
+                if (targetService is null)
+                    return;
+                var targetUri = loadBalancer.GetNextServiceServer(targetService);
 
                 var request = new HttpRequestMessage
                 {
@@ -71,6 +82,13 @@ namespace Balancer
                 Console.WriteLine("Error processing request");
                 Console.WriteLine(ex.Message);
             }
+        }
+        
+        private string? GetTargetService(string path)
+        {
+            return (from service in _serviceEndpoints 
+                where service.Value.Any(endpoint => endpoint.Equals(path)) 
+                select service.Key).FirstOrDefault();
         }
     }
 }
