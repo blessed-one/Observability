@@ -10,8 +10,7 @@ namespace Balancer
         {
             try
             {
-                var targetServer = loadBalancer.GetNextServer();
-                var targetUri = new Uri(targetServer);
+                var targetUri = loadBalancer.GetNextServer();
 
                 var request = new HttpRequestMessage
                 {
