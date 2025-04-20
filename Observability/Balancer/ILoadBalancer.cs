@@ -2,12 +2,12 @@
 {
     public interface ILoadBalancer
     {
-        string GetNextServer();
+        Uri GetNextServer();
 
-        void AddServer(string severUrl);
+        void AddServer(Uri severUrl);
 
-        void RemoveServer(string severUrl);
+        void RemoveServer(Uri severUrl);
 
-        IReadOnlyList<string> GetServers();
+        IReadOnlyList<Uri> GetServers();
     }
 }
