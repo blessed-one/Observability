@@ -12,7 +12,7 @@ var app = builder.Build();
 
 app.UseMiddleware<ObservabilityMiddleware>();
 
-app.MapGet("/hello", () => "Hello from SECOND service!");
+app.MapGet("/hello2", () => "Hello from SECOND service!");
 
 async Task<IResult> DoSomethingAsync()
 {

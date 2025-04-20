@@ -14,7 +14,7 @@ var app = builder.Build();
 
 app.UseMiddleware<ObservabilityMiddleware>();
 
-app.MapGet("/hello", () => "Hello from FIRST service!");
+app.MapGet("/hello1", () => "Hello from FIRST service!");
 
 app.MapGet("/DoFirst", async (HttpContext context) =>
 {
