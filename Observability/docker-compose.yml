@@ -1,4 +1,9 @@
 name: ${PROJECT_NAME}
+
+x-service-dependencies: &service-dependencies
+  - first-service
+  - second-service
+
 services:
   first-service:
     image: first-service
@@ -8,11 +13,9 @@ services:
     env_file: .env
     deploy:
       replicas: 5
-    ports:
-      - "${FIRST_SERVICE_MIN_PORT}-${FIRST_SERVICE_MAX_PORT}:8080"
-    depends_on:
-      - second-service
-  
+    networks:
+      - app_network
+
   second-service:
     image: second-service
     build:
@@ -21,15 +24,20 @@ services:
     env_file: .env
     deploy:
       replicas: 5
-    ports:
-      - "${SECOND_SERVICE_MIN_PORT}-${SECOND_SERVICE_MAX_PORT}:8080"
-  
+    networks:
+      - app_network
+
   balancer:
     image: balancer
     build:
       context: .
       dockerfile: Balancer/Dockerfile
     ports:
-      - "5049:5049"
-    depends_on:
-      - first-service
+      - "5049:8080"
+    depends_on: *service-dependencies
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
