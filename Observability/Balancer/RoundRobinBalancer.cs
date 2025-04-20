@@ -1,90 +1,87 @@
-﻿namespace Balancer
+﻿using System.Collections.Concurrent;
+
+namespace Balancer
 {
     public class RoundRobinBalancer : ILoadBalancer
     {
-        private readonly List<Uri> _servers = new();
-        private int _currentIndex = 0;
-        private readonly object _lock = new();
+        private readonly ConcurrentDictionary<string, ServicePool> _servicePools = new();
         private readonly MyDnsClient _dnsClient;
 
         public RoundRobinBalancer()
         {
             _dnsClient = new MyDnsClient();
-        
-            UpdateServers("first-service", 8080).Wait();
-        
-            var timer = new Timer(_ => 
-            {
-                UpdateServers("first-service", 8080).Wait();
-            }, null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+            
+            InitializeServices();
+            
+            var updateTimer = new Timer(
+                async void (_) => await UpdateAllServices(), 
+                null, 
+                TimeSpan.Zero, 
+                TimeSpan.FromSeconds(30)
+            );
         }
         
-        private async Task UpdateServers(string serviceName, int port)
+        private void InitializeServices()
         {
-            try 
+            var services = new Dictionary<string, int>
+            {
+                ["first-service"] = 8080,
+                ["second-service"] = 8080
+            };
+
+            foreach (var (serviceName, port) in services)
+            {
+                _servicePools.TryAdd(serviceName, new ServicePool());
+                UpdateService(serviceName, port).Wait();
+            }
+        }
+        
+        private async Task UpdateService(string serviceName, int port)
+        {
+            try
             {
                 var endpoints = await _dnsClient.ResolveServiceAsync(serviceName);
-                lock (_lock)
+                var uris = endpoints.Select(ip => new Uri($"http://{ip}:{port}")).ToList();
+
+                if (!_servicePools.TryGetValue(serviceName, out var pool))
+                    return;
+
+                lock (pool.Lock)
                 {
-                    _servers.Clear();
-                    _servers.AddRange(endpoints.Select(ip => new Uri($"http://{ip}:{port}")));
+                    pool.Servers.Clear();
+                    pool.Servers.AddRange(uris);
+                    pool.CurrentIndex = 0;
+                    pool.Port = port;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine($"[{DateTime.UtcNow}] Error updating {serviceName}: {ex.Message}");
             }
         }
-
-        public Uri GetNextServer()
+        
+        private async Task UpdateAllServices()
         {
-            lock (_lock)
+            foreach (var (serviceName, pool) in _servicePools)
             {
-                if (_servers.Count == 0)
-                {
-                    throw new InvalidOperationException("No servers available in the pool.");
-                }
-
-                var serverUri = _servers[_currentIndex];
-                _currentIndex = (_currentIndex + 1) % _servers.Count;
-
-                return serverUri;
+                await UpdateService(serviceName, pool.Port);
             }
         }
-
-        public void AddServer(Uri serverUrl)
+        
+        public Uri GetNextServiceServer(string serviceName)
         {
-            if (string.IsNullOrEmpty(serverUrl.ToString()))
+            if (!_servicePools.TryGetValue(serviceName, out var pool))
+                throw new ArgumentException($"Service {serviceName} not registered");
+
+            lock (pool.Lock)
             {
-                throw new ArgumentException("Server URL cannot be empty.", nameof(serverUrl));
+                if (pool.Servers.Count == 0)
+                    throw new InvalidOperationException($"No servers available for {serviceName}");
+
+                var server = pool.Servers[pool.CurrentIndex];
+                pool.CurrentIndex = (pool.CurrentIndex + 1) % pool.Servers.Count;
+                return server;
             }
-
-            lock (_lock)
-            {
-                if (!_servers.Contains(serverUrl))
-                {
-                    _servers.Add(serverUrl);
-                }
-            }
-        }
-
-        public void RemoveServer(Uri serverUrl)
-        {
-            lock (_lock)
-            {
-                _servers.Remove(serverUrl);
-
-                if (_currentIndex >= _servers.Count)
-                {
-                    _currentIndex = 0;
-                }
-            }
-        }
-
-        public IReadOnlyList<Uri> GetServers()
-        {
-            lock (_lock)
-                return _servers.AsReadOnly();
         }
     }
 }
