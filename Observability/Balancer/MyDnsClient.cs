@@ -9,9 +9,9 @@ namespace Balancer
         {
             var lookup = new LookupClient();
             var result = await lookup.QueryAsync(serviceName, QueryType.A);
-        
+            
             return result.Answers
-                .OfType<DnsClient.Protocol.ARecord>()
+                .ARecords()
                 .Select(record => record.Address)
                 .ToList();
         }
