@@ -12,6 +12,8 @@ services:
       - "${FIRST_SERVICE_MIN_PORT}-${FIRST_SERVICE_MAX_PORT}:8080"
     depends_on:
       - second-service
+      - mongo
+      - storage
         
   second-service:
     image: second-service
@@ -23,6 +25,9 @@ services:
       replicas: 5
     ports:
       - "${SECOND_SERVICE_MIN_PORT}-${SECOND_SERVICE_MAX_PORT}:8080"
+    depends_on:
+      - mongo
+      - storage
   
   balancer:
     image: balancer
@@ -33,3 +38,27 @@ services:
       - "5049:5049"
     depends_on:
       - first-service
+      - second-service
+      - mongo
+      - storage
+  
+  storage:
+    image: storage
+    build:
+      context: .
+      dockerfile: Storage/Dockerfile
+    env_file: .env
+    ports:
+      - "5050:8080"
+    depends_on:
+      - mongo
+  
+  mongo:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+        
+volumes:
+  mongodb_data:

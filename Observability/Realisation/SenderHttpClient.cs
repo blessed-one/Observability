@@ -5,7 +5,12 @@ namespace Realisation;
 
 public class SenderHttpClient(Uri storageUri) : IObservabilitySender
 {
-    private readonly HttpClient _httpClient = new();
+    private readonly HttpClient _httpClient = new()
+    {
+        BaseAddress = storageUri, 
+        DefaultRequestHeaders = { { "Storage-Key", "avava228" } }
+    };
+
     public async Task SendAsync(string logJson)
     {
         try
@@ -15,7 +20,7 @@ public class SenderHttpClient(Uri storageUri) : IObservabilitySender
                 Content = new StringContent(logJson, Encoding.UTF8,
                     "application/json"),
                 Method = HttpMethod.Post,
-                RequestUri = storageUri,
+                RequestUri = new Uri("add", UriKind.Relative),
             };
             var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
