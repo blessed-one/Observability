@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddHttpClient("Balancer", httpClient =>
-    httpClient.BaseAddress = new Uri(builder.Configuration["ApiGateway:Url"]!));
+    httpClient.BaseAddress = new Uri("http://balancer:8080"));
 builder.Services.AddSingleton<IObservabilitySender>(
     new SenderHttpClient(new Uri(builder.Configuration["Storage:Url"]!)));
 
@@ -29,7 +29,7 @@ app.MapGet("/DoFirst", async (HttpContext context) =>
 
         client.DefaultRequestHeaders.Add("traceparent", traceId);
 
-        var response = await client.GetAsync("/secondService");
+        var response = await client.GetAsync("http://balancer:8080/DoSecond");
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
