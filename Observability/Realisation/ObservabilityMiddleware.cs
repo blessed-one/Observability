@@ -4,9 +4,9 @@ using Realisation.Abstractions;
 
 namespace Realisation;
 
-public class ObservabilityMiddleware(IObservabilitySender sender, RequestDelegate next)
+public class ObservabilityMiddleware(IObservabilitySender sender, RequestDelegate next, string prefix)
 {
-    private static string nodeId = $"fir-{Environment.GetEnvironmentVariable("HOSTNAME")}";
+    private readonly string nodeId = $"{prefix}-{Environment.GetEnvironmentVariable("HOSTNAME")}";
     public async Task InvokeAsync(HttpContext context)
     {
         var activity = new ObservabilityActivity(nodeId, context);
@@ -20,12 +20,14 @@ public class ObservabilityMiddleware(IObservabilitySender sender, RequestDelegat
         catch (Exception e)
         {
             activity.Error(e.Message);
+            
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            await context.Response.WriteAsync(e.Message);
         }
         finally
         {
             activity.Stop();
             await sender.SendAsync(activity.GetActivityJson());
-            Console.WriteLine(activity.GetActivityJson());
         }
     }
 }

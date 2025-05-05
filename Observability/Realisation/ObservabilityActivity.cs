@@ -14,7 +14,7 @@ public class ObservabilityActivity
         _stopWatch = Stopwatch.StartNew();
         Record = new ObservabilityRecord
         {
-            TraceId = Activity.Current!.TraceId.ToString(),
+            TraceId = httpContext.Items["TraceId"]?.ToString() ?? "unknown",
             ParentId = "0",
             NodeId = nodeId,
             Timestamp = DateTime.UtcNow,
@@ -24,7 +24,6 @@ public class ObservabilityActivity
             IsError = false
         };
         AddFromRequest(httpContext.Request);
-        httpContext.Items["TraceId"] = Record.TraceId;
     }
 
     private void AddFromRequest(HttpRequest request)
