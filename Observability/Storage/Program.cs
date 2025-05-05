@@ -29,6 +29,7 @@ services.AddValidation();
 
 var app = builder.Build();
 
+
 app.UseExceptionHandler(exceptionHandlerApp =>
 {
     exceptionHandlerApp.Run(async context =>
@@ -44,6 +45,7 @@ app.UseExceptionHandler(exceptionHandlerApp =>
     });
 });
 
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<StorageKeyMiddleware>();
 
 app.MapGet("/health", async (IMongoClient mongoClient) =>

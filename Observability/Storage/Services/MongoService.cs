@@ -26,6 +26,7 @@ public class MongoService(IMongoCollection<RecordEntity> collection)
     public async Task<IEnumerable<ObservabilityRecord>> GetLastNRecordsAsync(int n)
     {
         var entities = await collection.Find(_ => true)
+            .Sort(Builders<RecordEntity>.Sort.Descending("_id"))
             .Limit(n)
             .ToListAsync();
         var models = entities.Select(entity => entity.ToModel()).ToList();

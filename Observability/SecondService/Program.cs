@@ -10,7 +10,8 @@ builder.Services.AddSingleton<IObservabilitySender>(
 
 var app = builder.Build();
 
-app.UseMiddleware<ObservabilityMiddleware>();
+app.UseMiddleware<TraceIdMiddleware>();
+app.UseMiddleware<ObservabilityMiddleware>("sec");
 
 app.MapGet("/hello2", () => "Hello from SECOND service!");
 
@@ -19,9 +20,11 @@ async Task<IResult> DoSomethingAsync()
     await Task.Delay(2500);
 
     var bug = Random.Shared.NextDouble();
-    return bug < 0.95
-        ? Results.Ok("__second")
-        : Results.Problem("second service error");
+    
+    if (bug > 1.95)
+        throw new Exception("something went wrong");
+
+    return Results.Ok("__second");
 }
 
 app.MapGet("/DoSecond", DoSomethingAsync);

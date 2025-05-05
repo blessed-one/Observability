@@ -27,7 +27,7 @@ public class SenderHttpClient(Uri storageUri) : IObservabilitySender
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"exception while sending log to storage: {ex.Message}");
+            Console.WriteLine($"exception while sending log to storage: {ex}");
         }
     }
 }
