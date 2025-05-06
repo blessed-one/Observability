@@ -10,7 +10,6 @@ builder.Services.AddSingleton<IObservabilitySender>(
 
 var app = builder.Build();
 
-app.UseMiddleware<TraceIdMiddleware>();
 app.UseMiddleware<ObservabilityMiddleware>("sec");
 
 app.MapGet("/hello2", () => "Hello from SECOND service!");

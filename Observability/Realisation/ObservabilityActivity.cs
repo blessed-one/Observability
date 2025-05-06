@@ -14,7 +14,7 @@ public class ObservabilityActivity
         _stopWatch = Stopwatch.StartNew();
         Record = new ObservabilityRecord
         {
-            TraceId = httpContext.Items["TraceId"]?.ToString() ?? "unknown",
+            TraceId = httpContext.TraceIdentifier,
             ParentId = "0",
             NodeId = nodeId,
             Timestamp = DateTime.UtcNow,
@@ -29,7 +29,7 @@ public class ObservabilityActivity
     private void AddFromRequest(HttpRequest request)
     {
         var method = request.Method;
-        var parentId = request.Headers.TryGetValue("traceparent", out var parentIdValue)
+        var parentId = request.Headers.TryGetValue("trace-parent-id", out var parentIdValue)
             ? parentIdValue.ToString()
             : "0";
         var path = request.Path.ToString();
@@ -37,6 +37,11 @@ public class ObservabilityActivity
         Record.ParentId = parentId;
         Record.HttpRequestData["method"] = method;
         Record.HttpRequestData["path"] = path;
+        
+        foreach (var header in request.Headers)
+        {
+            Record.HttpRequestData[$"header:{header.Key}"] = header.Value.ToString();
+        }
     }
     
     public void Start() => _stopWatch.Start();
