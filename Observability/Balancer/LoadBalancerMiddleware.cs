@@ -37,7 +37,7 @@ namespace Balancer
 
                 foreach (var header in context.Request.Headers)
                 {
-                    if (header.Key.Equals("traceparent", StringComparison.OrdinalIgnoreCase))
+                    if (header.Key.Equals("trace-parent-id", StringComparison.OrdinalIgnoreCase))
                         continue;
                     
                     var isContentHeader = header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase)
@@ -54,6 +54,8 @@ namespace Balancer
                         request.Headers.TryAddWithoutValidation(header.Key, header.Value.ToString());
                     }
                 }
+                
+                request.Headers.Add("trace-parent-id", context.TraceIdentifier);
 
                 var response = await _httpClient.SendAsync(request);
 

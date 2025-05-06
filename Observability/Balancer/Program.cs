@@ -17,7 +17,6 @@ services.AddSingleton<IObservabilitySender>(
 
 var app = builder.Build();
 
-app.UseMiddleware<TraceIdMiddleware>();
 app.UseMiddleware<ObservabilityMiddleware>("balance");
 app.UseMiddleware<LoadBalancerMiddleware>();
 
