@@ -68,6 +68,20 @@ services:
       - mongodb_data:/data/db
     networks:
       - app_network
+   
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource
+    depends_on:
+      - storage
+    networks:
+      - app_network
+    volumes:
+      - grafana_data:/var/lib/grafana
 
 networks:
   app_network:
@@ -75,3 +89,4 @@ networks:
 
 volumes:
   mongodb_data:
+  grafana_data:

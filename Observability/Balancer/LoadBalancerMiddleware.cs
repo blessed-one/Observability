@@ -40,6 +40,9 @@ namespace Balancer
                     var isContentHeader = header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase)
                         || header.Key.Equals("ContentType", StringComparison.OrdinalIgnoreCase)
                         || header.Key.Equals("Content-Length", StringComparison.OrdinalIgnoreCase);
+                    
+                    if (header.Key.Equals("TraceId", StringComparison.OrdinalIgnoreCase))
+                        continue;
 
                     if (isContentHeader)
                     {
@@ -48,7 +51,7 @@ namespace Balancer
                     }
                     else
                     {
-                        request.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+                        request.Headers.TryAddWithoutValidation(header.Key, header.Value.ToString());
                     }
                 }
 

@@ -56,8 +56,36 @@ app.MapGet("/health", async (IMongoClient mongoClient) =>
 
 app.MapGet("/records", async (MongoService mongoService) =>
 {
-    var records = await mongoService.GetAllRecordsAsync();
+    var records = (await mongoService.GetAllRecordsAsync())
+        .Select(r => new
+        {
+            r.TraceId,
+            r.ParentId,
+            r.NodeId,
+            Method = r.HttpRequestData["method"],
+            Path = r.HttpRequestData["path"],
+            r.IsError,
+            r.Timestamp,
+            r.Message
+        });
+    
     return Results.Ok(records);
+});
+
+app.MapGet("/metrics", async (MongoService mongoService) =>
+{
+    var metrics = (await mongoService.GetAllRecordsAsync())
+        .Select(r => new
+    {
+        r.NodeId,
+        r.TraceId,
+        r.Timestamp,
+        Cpu = r.MetricData!["cpu"],
+        Duration = r.MetricData!["duration"],
+        Memory = r.MetricData!["memory"]
+    });
+    
+    return Results.Ok(metrics);
 });
 
 app.MapGet("/records/last/{n:int}", async (int n, MongoService mongoService) =>
