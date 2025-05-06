@@ -12,7 +12,6 @@ builder.Services.AddSingleton<IObservabilitySender>(
 
 var app = builder.Build();
 
-app.UseMiddleware<TraceIdMiddleware>();
 app.UseMiddleware<ObservabilityMiddleware>("fir");
 
 app.MapGet("/hello1", () => "Hello from FIRST service!");
@@ -25,10 +24,14 @@ app.MapGet("/DoFirst", async (HttpContext context) =>
     {
         var client = context.RequestServices.GetRequiredService<HttpClient>();
 
-        client.DefaultRequestHeaders.Remove("trace-parent-id");
-        client.DefaultRequestHeaders.TryAddWithoutValidation("trace-parent-id", context.TraceIdentifier);
+        var request = new HttpRequestMessage()
+        {
+            Method = HttpMethod.Get,
+            Headers = { {"trace-parent-id", context.TraceIdentifier }},
+            RequestUri = new Uri("http://balancer:8080/DoSecond")
+        };
 
-        var response = await client.GetAsync("http://balancer:8080/DoSecond");
+        var response = await client.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
