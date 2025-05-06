@@ -22,7 +22,7 @@ services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-services.AddProblemDetails(); 
+services.AddProblemDetails();
 services.AddMongoDb(builder.Configuration["MongoDb:ConnectionString"]!);
 services.AddValidation();
 
@@ -35,7 +35,7 @@ app.UseExceptionHandler(exceptionHandlerApp =>
     exceptionHandlerApp.Run(async context =>
     {
         var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-        
+
         await context.Response.WriteAsJsonAsync(new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,
@@ -68,7 +68,14 @@ app.MapGet("/records", async (MongoService mongoService) =>
             r.Timestamp,
             r.Message
         });
-    
+
+    return Results.Ok(records);
+});
+
+app.MapGet("/records-debug", async (MongoService mongoService) =>
+{
+    var records = await mongoService.GetAllRecordsAsync();
+
     return Results.Ok(records);
 });
 
@@ -76,15 +83,15 @@ app.MapGet("/metrics", async (MongoService mongoService) =>
 {
     var metrics = (await mongoService.GetAllRecordsAsync())
         .Select(r => new
-    {
-        r.NodeId,
-        r.TraceId,
-        r.Timestamp,
-        Cpu = r.MetricData!["cpu"],
-        Duration = r.MetricData!["duration"],
-        Memory = r.MetricData!["memory"]
-    });
-    
+        {
+            r.NodeId,
+            r.TraceId,
+            r.Timestamp,
+            Cpu = r.MetricData!["cpu"],
+            Duration = r.MetricData!["duration"],
+            Memory = r.MetricData!["memory"]
+        });
+
     return Results.Ok(metrics);
 });
 
