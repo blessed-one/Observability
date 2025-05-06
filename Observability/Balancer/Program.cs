@@ -11,7 +11,7 @@ var services = builder.Services;
 
 services.AddHttpClient();
 services.AddSingleton<ILoadBalancer, RoundRobinBalancer>();
-services.AddTransient<LoadBalancerMiddleware>();
+services.AddSingleton<LoadBalancerMiddleware>();
 services.AddSingleton<IObservabilitySender>(
     new SenderHttpClient(new Uri(builder.Configuration["Storage:Url"]!)));
 
