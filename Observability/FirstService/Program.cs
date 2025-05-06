@@ -19,16 +19,14 @@ app.MapGet("/hello1", () => "Hello from FIRST service!");
 
 app.MapGet("/DoFirst", async (HttpContext context) =>
 {
-    await Task.Delay(5000);
+    await Task.Delay(1000);
 
     try
     {
         var client = context.RequestServices.GetRequiredService<HttpClient>();
 
-        var traceId = context.Items["TraceId"]?.ToString()
-                      ?? throw new InvalidOperationException("Trace ID not found");
-
-        client.DefaultRequestHeaders.Add("traceparent", traceId);
+        client.DefaultRequestHeaders.Remove("traceparent");
+        client.DefaultRequestHeaders.TryAddWithoutValidation("traceparent", context.TraceIdentifier);
 
         var response = await client.GetAsync("http://balancer:8080/DoSecond");
         response.EnsureSuccessStatusCode();
@@ -36,7 +34,7 @@ app.MapGet("/DoFirst", async (HttpContext context) =>
         var content = await response.Content.ReadAsStringAsync();
         var modifiedContent = $"FIR__{content}";
 
-        await Task.Delay(5000);
+        await Task.Delay(1000);
 
         return Results.Ok(modifiedContent);
     }

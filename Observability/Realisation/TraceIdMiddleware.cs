@@ -8,11 +8,7 @@ namespace Realisation
     {
         public async Task InvokeAsync(HttpContext context)
         {
-            if (Activity.Current != null)
-            {
-                context.Items["TraceId"] = Activity.Current.TraceId.ToString();
-            }
-
+            context.Response.Headers.Add("traceparent", context.TraceIdentifier);
             await next(context);
         }
     }

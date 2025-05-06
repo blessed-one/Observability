@@ -37,6 +37,14 @@ namespace Balancer
 
                 foreach (var header in context.Request.Headers)
                 {
+                    if (header.Key.Equals("traceparent", StringComparison.OrdinalIgnoreCase))
+                    {
+                        request.Content ??= new ByteArrayContent([]);
+                        request.Content.Headers.TryAddWithoutValidation(
+                            header.Key, context.TraceIdentifier);
+                        continue;
+                    }
+                    
                     var isContentHeader = header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase)
                         || header.Key.Equals("ContentType", StringComparison.OrdinalIgnoreCase)
                         || header.Key.Equals("Content-Length", StringComparison.OrdinalIgnoreCase);
