@@ -55,28 +55,14 @@ namespace Balancer
                     }
                 }
 
-                request.Headers.Remove("traceparent");
-                request.Headers.TryAddWithoutValidation("trace-parent-id", context.TraceIdentifier);
-                Console.WriteLine("new request headers");
-                foreach (KeyValuePair<string,IEnumerable<string>> he in request.Headers)
-                {
-                    Console.WriteLine(he.Key + ":" + string.Join(",", he.Value));
-                }
-                
-                Console.WriteLine("Sending request...");
                 var response = await _httpClient.SendAsync(request);
 
                 context.Response.StatusCode = (int)response.StatusCode;
                 
                 foreach (var header in response.Headers)
                 {
-                    if (!header.Key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase))
-                        context.Response.Headers[header.Key] = header.Value.ToArray();
-                }
-
-                foreach (var header in response.Content.Headers)
-                {
-                    if (!header.Key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase))
+                    if (!header.Key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase)
+                        && !header.Key.Equals("traceparent", StringComparison.OrdinalIgnoreCase))
                         context.Response.Headers[header.Key] = header.Value.ToArray();
                 }
 
