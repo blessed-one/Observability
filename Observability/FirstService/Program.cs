@@ -25,8 +25,8 @@ app.MapGet("/DoFirst", async (HttpContext context) =>
     {
         var client = context.RequestServices.GetRequiredService<HttpClient>();
 
-        client.DefaultRequestHeaders.Remove("traceparent");
-        client.DefaultRequestHeaders.TryAddWithoutValidation("traceparent", context.TraceIdentifier);
+        client.DefaultRequestHeaders.Remove("trace-parent-id");
+        client.DefaultRequestHeaders.TryAddWithoutValidation("trace-parent-id", context.TraceIdentifier);
 
         var response = await client.GetAsync("http://balancer:8080/DoSecond");
         response.EnsureSuccessStatusCode();

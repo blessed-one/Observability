@@ -29,7 +29,7 @@ public class ObservabilityActivity
     private void AddFromRequest(HttpRequest request)
     {
         var method = request.Method;
-        var parentId = request.Headers.TryGetValue("traceparent", out var parentIdValue)
+        var parentId = request.Headers.TryGetValue("trace-parent-id", out var parentIdValue)
             ? parentIdValue.ToString()
             : "0";
         var path = request.Path.ToString();
