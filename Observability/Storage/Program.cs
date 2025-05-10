@@ -109,4 +109,25 @@ app.MapPost("/add", async (
     return Results.Ok(new { Message = "Record stored successfully", Id = entity.Id });
 });
 
+app.MapGet("/records/trace/{traceId}", async (string traceId, MongoService mongoService) =>
+{
+    var records = await mongoService.GetRecordsByTraceIdAsync(traceId);
+    return Results.Ok(records);
+});
+
+app.MapGet("/records/range", async (
+    [FromQuery] DateTime start,
+    [FromQuery] DateTime end,
+    MongoService mongoService) =>
+{
+    var records = await mongoService.GetRecordsByTimeRangeAsync(start, end);
+    return Results.Ok(records);
+});
+
+app.MapGet("/records/host/{host}", async (string host, MongoService mongoService) =>
+{
+    var records = await mongoService.GetRecordsByHostAsync(host);
+    return Results.Ok(records);
+});
+
 app.Run();

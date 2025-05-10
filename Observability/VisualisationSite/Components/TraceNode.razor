@@ -1,0 +1,170 @@
+@using Realisation
+@using VisualisationSite.Models
+@using VisualisationSite.Services
+@inject TraceService TraceService
+
+<div class="trace-node-item" style="margin-left: @(Level * 20)px">
+    <div class="trace-node-header" @onclick="ToggleExpanded">
+        <span class="trace-node-icon">
+            @if (_isExpanded)
+            {
+                <i class="oi oi-chevron-bottom"></i>
+            }
+            else
+            {
+                <i class="oi oi-chevron-right"></i>
+            }
+        </span>
+        <span class="trace-node-type">
+            @GetNodeTypeIcon()
+        </span>
+        <span class="trace-node-method @Trace.GetMethod().ToLower()">
+            @Trace.GetMethod()
+        </span>
+        <span class="trace-node-path">
+            @Trace.GetPath()
+        </span>
+        <span class="trace-node-host">
+            @Trace.GetHost()
+        </span>
+        <span class="trace-node-metrics">
+            <span class="duration">@Trace.GetDuration()ms</span>
+            <span class="memory">@(Trace.GetMemory() / 1024)KB</span>
+            <span class="cpu">@Trace.GetCpu()</span>
+        </span>
+    </div>
+
+    @if (_isExpanded)
+    {
+        <div class="trace-node-details">
+            <div class="trace-node-children">
+                @if (_childTraces == null)
+                {
+                    <div class="loading">Loading...</div>
+                }
+                else
+                {
+                    @foreach (var childTrace in _childTraces)
+                    {
+                        <TraceNode Trace="@childTrace" Level="@(Level + 1)" />
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public required ObservabilityRecord Trace { get; set; }
+
+    [Parameter]
+    public int Level { get; set; }
+
+    private bool _isExpanded;
+    private IEnumerable<ObservabilityRecord>? _childTraces;
+
+    private async Task ToggleExpanded()
+    {
+        _isExpanded = !_isExpanded;
+        if (_isExpanded && _childTraces == null)
+        {
+            _childTraces = await TraceService.GetTracesByParentId(Trace.NodeId);
+            StateHasChanged();
+        }
+    }
+
+    private string GetNodeTypeIcon()
+    {
+        var host = Trace.GetHost().ToLower();
+        if (host.Contains("balancer"))
+            return "🌐";
+        if (host.Contains("localhost"))
+            return "💻";
+        return "⚙️";
+    }
+}
+
+<style>
+    .trace-node-item {
+        margin: 4px 0;
+    }
+
+    .trace-node-header {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .trace-node-header:hover {
+        background-color: #e9ecef;
+    }
+
+    .trace-node-icon {
+        margin-right: 8px;
+        width: 16px;
+        text-align: center;
+    }
+
+    .trace-node-type {
+        margin-right: 8px;
+        font-size: 1.2em;
+    }
+
+    .trace-node-method {
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-right: 8px;
+        font-weight: bold;
+    }
+
+    .trace-node-method.get {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .trace-node-method.post {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .trace-node-path {
+        margin-right: 8px;
+        color: #666;
+    }
+
+    .trace-node-host {
+        margin-right: 8px;
+        color: #888;
+        font-size: 0.9em;
+    }
+
+    .trace-node-metrics {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+        font-size: 0.9em;
+    }
+
+    .trace-node-metrics span {
+        padding: 2px 6px;
+        border-radius: 4px;
+        background-color: #f1f3f4;
+    }
+
+    .trace-node-details {
+        margin-top: 4px;
+    }
+
+    .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        color: #666;
+        font-style: italic;
+    }
+</style> 

@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecondService", "SecondServ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storage", "Storage\Storage.csproj", "{8C1D4A20-20CE-44EA-B65D-A933987ED777}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualisationSite", "VisualisationSite\VisualisationSite.csproj", "{99D948A4-069A-4528-90FD-F6803EFCFEEC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{8C1D4A20-20CE-44EA-B65D-A933987ED777}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C1D4A20-20CE-44EA-B65D-A933987ED777}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C1D4A20-20CE-44EA-B65D-A933987ED777}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99D948A4-069A-4528-90FD-F6803EFCFEEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99D948A4-069A-4528-90FD-F6803EFCFEEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99D948A4-069A-4528-90FD-F6803EFCFEEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99D948A4-069A-4528-90FD-F6803EFCFEEC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

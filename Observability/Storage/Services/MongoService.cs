@@ -33,4 +33,39 @@ public class MongoService(IMongoCollection<RecordEntity> collection)
         
         return models;
     }
+
+    public async Task<IEnumerable<ObservabilityRecord>> GetRecordsByTraceIdAsync(string traceId)
+    {
+        var entities = await collection.Find(r => r.TraceId == traceId)
+            .Sort(Builders<RecordEntity>.Sort.Ascending("Timestamp"))
+            .ToListAsync();
+        var models = entities.Select(entity => entity.ToModel()).ToList();
+        
+        return models;
+    }
+
+    public async Task<IEnumerable<ObservabilityRecord>> GetRecordsByTimeRangeAsync(DateTime start, DateTime end)
+    {
+        var entities = await collection.Find(r => r.Timestamp >= start && r.Timestamp <= end)
+            .Sort(Builders<RecordEntity>.Sort.Ascending("Timestamp"))
+            .ToListAsync();
+        var models = entities.Select(entity => entity.ToModel()).ToList();
+        
+        return models;
+    }
+
+    public async Task<IEnumerable<ObservabilityRecord>> GetRecordsByHostAsync(string host)
+    {
+        var filter = Builders<RecordEntity>.Filter.Regex(
+            "HttpRequestData.header:Host",
+            new BsonRegularExpression(host, "i")
+        );
+        
+        var entities = await collection.Find(filter)
+            .Sort(Builders<RecordEntity>.Sort.Ascending("Timestamp"))
+            .ToListAsync();
+        var models = entities.Select(entity => entity.ToModel()).ToList();
+        
+        return models;
+    }
 } 
