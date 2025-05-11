@@ -9,8 +9,8 @@ public class StorageKeyMiddleware(RequestDelegate next)
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (!context.Request.Headers.TryGetValue(StorageKeyHeader, out var headerValue) || 
-            headerValue != StorageKey)
+        if ((!context.Request.Headers.TryGetValue(StorageKeyHeader, out var headerValue) ||
+             headerValue != StorageKey) && !context.Request.Path.StartsWithSegments("/ws"))
         {
             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             await context.Response.WriteAsJsonAsync(new
