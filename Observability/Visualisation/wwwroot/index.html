@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Визуализация трейсов</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/site.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <script src="js/app.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Визуализация трейсов</h1>
+        </header>
+        
+        <main>
+            <div class="grid-container">
+                <!-- Дерево запросов -->
+                <section class="tree-section">
+                    <h2>Дерево запросов</h2>
+                    <div id="requestTree" class="tree"></div>
+                </section>
+                
+                <!-- Временная шкала -->
+                <section class="timeline-section">
+                    <h2>Временная шкала</h2>
+                    <canvas id="timeline" class="timeline"></canvas>
+                </section>
+                
+                <!-- Детали запроса -->
+                <section class="details-section">
+                    <h2>Детали запроса</h2>
+                    <div id="requestDetails" class="details">
+                        <div id="httpRequestData"></div>
+                        <div id="metricsChart"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html> 

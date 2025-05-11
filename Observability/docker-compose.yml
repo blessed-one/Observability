@@ -60,6 +60,19 @@ services:
     networks:
       - app_network
 
+  visualisation:
+    image: visualisation
+    build:
+      context: .
+      dockerfile: Visualisation/Dockerfile
+    env_file: .env
+    ports:
+      - "5047:8080"
+    depends_on:
+      - storage
+    networks:
+      - app_network
+
   mongo:
     image: mongo:6.0
     ports:
