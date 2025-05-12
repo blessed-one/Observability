@@ -57,6 +57,7 @@ services:
       - "5050:8080"
     depends_on:
       - mongo
+      - telegram-bot
     networks:
       - app_network
 
@@ -81,6 +82,17 @@ services:
       - app_network
     volumes:
       - grafana_data:/var/lib/grafana
+  
+  telegram-bot:
+    image: telegram-bot
+    build:
+      context: .
+      dockerfile: TelegramBot/Dockerfile
+    env_file: .env
+    ports:
+      - "5048:8080"
+    networks:
+      - app_network
 
 networks:
   app_network:
