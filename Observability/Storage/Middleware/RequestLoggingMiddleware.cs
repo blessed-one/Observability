@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
-
 namespace Storage.Middleware
 {
     public class RequestLoggingMiddleware
@@ -17,7 +14,7 @@ namespace Storage.Middleware
             var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             var path = context.Request.Path;
 
-            System.Console.WriteLine($"Request from {clientIp} to {path}");
+            Console.WriteLine($"Request from {clientIp} to {path}");
 
             await _next(context);
         }

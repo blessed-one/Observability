@@ -1,10 +1,9 @@
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using Realisation;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using Storage.Validators;
-using Storage;
 using Storage.Services;
 using Storage.Middleware;
 using System.Text.Json.Serialization;
@@ -20,6 +19,13 @@ services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = null;
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
+services.AddHttpClient("Bot", client => 
+{
+    client.BaseAddress = new Uri("http://telegram-bot:8080");
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
 services.AddProblemDetails();
@@ -104,10 +110,29 @@ app.MapGet("/records/last/{n:int}", async (int n, MongoService mongoService) =>
 app.MapPost("/add", async (
     [FromBody] ObservabilityRecord record,
     MongoService mongoService,
+    HttpContext context,
     WebSocketNotifier notifier) =>
 {
     var entity = await mongoService.AddRecordAsync(record);
     await notifier.NotifyAllAsync(record);
+    
+    var httpClient = context.RequestServices.GetRequiredService<IHttpClientFactory>()
+        .CreateClient("Bot");
+    
+    var logMessage = new 
+    {
+        Message = record.Message ?? "всё хорошо",
+        IsError = record.IsError
+    };
+    
+    var response = await httpClient.PostAsJsonAsync("api/logs/send", logMessage);
+    
+    if (!response.IsSuccessStatusCode)
+    {
+        var errorContent = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"Error from bot API: {response.StatusCode}, {errorContent}");
+    }
+    
     return Results.Ok(new { Message = "Record stored successfully", Id = entity.Id });
 });
 
