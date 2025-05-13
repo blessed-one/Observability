@@ -31,10 +31,9 @@ services.AddHttpClient("Bot", client =>
 services.AddProblemDetails();
 services.AddMongoDb(builder.Configuration["MongoDb:ConnectionString"]!);
 services.AddValidation();
-
+services.AddSingleton<WebSocketNotifier>();
 
 var app = builder.Build();
-
 
 app.UseExceptionHandler(exceptionHandlerApp =>
 {
@@ -53,6 +52,7 @@ app.UseExceptionHandler(exceptionHandlerApp =>
 
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<StorageKeyMiddleware>();
+app.UseWebSockets();
 
 app.MapGet("/health", async (IMongoClient mongoClient) =>
 {
@@ -110,7 +110,8 @@ app.MapGet("/records/last/{n:int}", async (int n, MongoService mongoService) =>
 app.MapPost("/add", async (
     [FromBody] ObservabilityRecord record,
     MongoService mongoService,
-    HttpContext context) =>
+    HttpContext context,
+    WebSocketNotifier notifier) =>
 {
     var entity = await mongoService.AddRecordAsync(record);
     
@@ -131,7 +132,53 @@ app.MapPost("/add", async (
         Console.WriteLine($"Error from bot API: {response.StatusCode}, {errorContent}");
     }
     
+    await notifier.NotifyAllAsync(record);
+  
     return Results.Ok(new { Message = "Record stored successfully", Id = entity.Id });
+});
+
+app.MapGet("/records/trace/{traceId}", async (string traceId, MongoService mongoService) =>
+{
+    var records = await mongoService.GetRecordsByTraceIdAsync(traceId);
+    return Results.Ok(records);
+});
+
+app.MapGet("/records/range", async (
+    [FromQuery] DateTime start,
+    [FromQuery] DateTime end,
+    MongoService mongoService) =>
+{
+    var records = await mongoService.GetRecordsByTimeRangeAsync(start, end);
+    return Results.Ok(records);
+});
+
+app.MapGet("/records/host/{host}", async (string host, MongoService mongoService) =>
+{
+    var records = await mongoService.GetRecordsByHostAsync(host);
+    return Results.Ok(records);
+});
+
+app.Map("/ws/updates", async context =>
+{
+    if (context.WebSockets.IsWebSocketRequest)
+    {
+        var ws = await context.WebSockets.AcceptWebSocketAsync();
+        var notifier = context.RequestServices.GetRequiredService<WebSocketNotifier>();
+        notifier.AddClient(ws);
+        var buffer = new byte[1024 * 4];
+        while (ws.State == System.Net.WebSockets.WebSocketState.Open)
+        {
+            var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            if (result.MessageType == System.Net.WebSockets.WebSocketMessageType.Close)
+                break;
+        }
+        notifier.RemoveClient(ws);
+        await ws.CloseAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "Closed", CancellationToken.None);
+    }
+    else
+    {
+        context.Response.StatusCode = 400;
+    }
 });
 
 app.Run();
