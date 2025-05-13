@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddHttpClient("Balancer", httpClient =>
-    httpClient.BaseAddress = new Uri("http://balancer:8080"));
+    httpClient.BaseAddress = new Uri("http://localhost:5049"));
 builder.Services.AddSingleton<IObservabilitySender>(
     new SenderHttpClient(new Uri(builder.Configuration["Storage:Url"]!)));
 
