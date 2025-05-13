@@ -114,7 +114,6 @@ app.MapPost("/add", async (
     WebSocketNotifier notifier) =>
 {
     var entity = await mongoService.AddRecordAsync(record);
-    await notifier.NotifyAllAsync(record);
     
     var httpClient = context.RequestServices.GetRequiredService<IHttpClientFactory>()
         .CreateClient("Bot");
@@ -133,6 +132,8 @@ app.MapPost("/add", async (
         Console.WriteLine($"Error from bot API: {response.StatusCode}, {errorContent}");
     }
     
+    await notifier.NotifyAllAsync(record);
+  
     return Results.Ok(new { Message = "Record stored successfully", Id = entity.Id });
 });
 
